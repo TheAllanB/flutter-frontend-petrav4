@@ -74,7 +74,7 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
       ]);
       if (mounted) {
         setState(() {
-          _allNodes = context.read<OrganizationProvider>().nodes;
+          _allNodes = context.read<OrganizationProvider>().nodeTree;
           _allRoles = futures[0] as List<Role>;
           _allMembers = futures[1];
           _isLoadingData = false;

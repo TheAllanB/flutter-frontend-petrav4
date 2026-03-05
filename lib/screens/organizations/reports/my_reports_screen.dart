@@ -61,18 +61,12 @@ class MyReportsScreen extends StatelessWidget {
     final orgId = orgProvider.currentOrg?.id;
 
     if (orgId == null) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return const Center(child: CircularProgressIndicator());
     }
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF4F7FC),
-      appBar: AppBar(
-        title: const Text('Reports Dashboard', style: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.white,
-        elevation: 1,
-        iconTheme: const IconThemeData(color: Colors.black),
-      ),
-      body: SingleChildScrollView(
+    return Container(
+      color: const Color(0xFFF4F7FC),
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

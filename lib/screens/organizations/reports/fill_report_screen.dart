@@ -39,7 +39,7 @@ class _FillReportScreenState extends State<FillReportScreen> {
         'value': e.value,
       }).toList();
 
-      await ReportService(token).submitReport(widget.orgId, widget.report.id, answersList);
+      await ReportService(token!).submitReport(widget.orgId, widget.report.id, answersList);
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Report submitted successfully!'), backgroundColor: Colors.green));

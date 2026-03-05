@@ -34,7 +34,7 @@ class _CreatedReportsScreenState extends State<CreatedReportsScreen> {
 
     try {
       final token = context.read<AuthProvider>().token;
-      final rawReports = await ReportService(token).getCreatedReports(widget.orgId);
+      final rawReports = await ReportService(token!).getCreatedReports(widget.orgId);
       
       setState(() {
         _createdReports = rawReports.map((r) => Report.fromJson(r)).toList();

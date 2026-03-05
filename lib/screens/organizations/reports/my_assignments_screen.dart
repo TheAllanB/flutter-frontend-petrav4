@@ -34,7 +34,7 @@ class _MyAssignmentsScreenState extends State<MyAssignmentsScreen> {
 
     try {
       final token = context.read<AuthProvider>().token;
-      final rawReports = await ReportService(token).getPendingReports(widget.orgId);
+      final rawReports = await ReportService(token!).getPendingReports(widget.orgId);
       
       setState(() {
         _pendingReports = rawReports.map((r) => Report.fromJson(r)).toList();
