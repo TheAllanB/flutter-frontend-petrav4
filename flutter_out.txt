@@ -1,0 +1,33 @@
+﻿Analyzing frontend...                                           
+
+warning - Duplicate import - lib\main.dart:7:8 - duplicate_import
+   info - Don't use 'BuildContext's across async gaps - lib\screens\auth\login_screen.dart:26:20 - use_build_context_synchronously
+  error - The name 'LoginScreen' isn't a class - lib\screens\auth\logout_screen.dart:13:47 - creation_with_non_type
+   info - Don't use 'BuildContext's across async gaps - lib\screens\auth\signup_screen.dart:29:28 - use_build_context_synchronously
+   info - Statements in an if should be enclosed in a block - lib\screens\organizations\create\create_org_step_1.dart:96:45 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\screens\organizations\create\create_org_step_1.dart:97:28 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\screens\organizations\create\create_org_step_2.dart:71:50 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\screens\organizations\create\create_org_step_2.dart:72:38 - curly_braces_in_flow_control_structures
+   info - Unnecessary use of 'toList' in a spread - lib\screens\organizations\create\create_org_step_2.dart:76:28 - unnecessary_to_list_in_spreads
+warning - Unused import: '../../../../providers/org_provider.dart' - lib\screens\organizations\reports\create_report_screen.dart:4:8 - unused_import
+   info - The private field _questions could be 'final' - lib\screens\organizations\reports\create_report_screen.dart:43:23 - prefer_final_fields
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\organizations\reports\create_report_screen.dart:204:51 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\organizations\reports\create_report_screen.dart:283:51 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\organizations\reports\create_report_screen.dart:284:47 - deprecated_member_use
+   info - 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre - lib\screens\organizations\reports\create_report_screen.dart:356:17 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\organizations\reports\create_report_screen.dart:430:51 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\organizations\reports\create_report_screen.dart:431:47 - deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\screens\organizations\reports\create_report_screen.dart:642:13 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\organizations\workspace\members_tab.dart:86:51 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\organizations\workspace\members_tab.dart:331:87 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\organizations\workspace\members_tab.dart:494:76 - deprecated_member_use
+  error - Target of URI doesn't exist: '../reports/groups_tab.dart' - lib\screens\organizations\workspace\organization_screen.dart:6:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: '../reports/reports_tab.dart' - lib\screens\organizations\workspace\organization_screen.dart:7:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: '../reports/settings_tab.dart' - lib\screens\organizations\workspace\organization_screen.dart:8:8 - uri_does_not_exist
+warning - Unused import: 'members_tab.dart' - lib\screens\organizations\workspace\organization_screen.dart:10:8 - unused_import
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\organizations\workspace\organization_screen.dart:87:45 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\organizations\workspace\organization_screen.dart:137:41 - deprecated_member_use
+  error - Target of URI doesn't exist: '../../reports/my_reports_screen.dart' - lib\screens\organizations\workspace\reports_tab.dart:3:8 - uri_does_not_exist
+  error - The name 'MyReportsScreen' isn't a class - lib\screens\organizations\workspace\reports_tab.dart:22:37 - creation_with_non_type
+   info - Use the null-aware marker '?' rather than a null check via an 'if' - lib\services\org_service.dart:149:9 - use_null_aware_elements
+

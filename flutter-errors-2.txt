@@ -1,0 +1,8 @@
+﻿Analyzing frontend...                                           
+
+  error - The name 'LoginScreen' isn't a class - lib\main.dart:48:71 - creation_with_non_type
+  error - The name 'ProfileScreen' isn't a class - lib\screens\main_navigation.dart:17:11 - creation_with_non_type
+warning - Unused import: 'workspace/organization_screen.dart' - lib\screens\organizations\joined_organizations_screen.dart:6:8 - unused_import
+  error - The method 'OrganizationScreen' isn't defined for the type '_JoinedOrganizationsScreenState' - lib\screens\organizations\joined_organizations_screen.dart:97:49 - undefined_method
+   info - Use the null-aware marker '?' rather than a null check via an 'if' - lib\services\org_service.dart:173:9 - use_null_aware_elements
+
