@@ -4,20 +4,20 @@ import 'package:intl/intl.dart';
 import '../../../models/report.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../services/report_service.dart';
-import 'fill_report_screen.dart';
+import 'report_submissions_screen.dart';
 
-class MyAssignmentsScreen extends StatefulWidget {
+class CreatedReportsScreen extends StatefulWidget {
   final int orgId;
 
-  const MyAssignmentsScreen({super.key, required this.orgId});
+  const CreatedReportsScreen({super.key, required this.orgId});
 
   @override
-  State<MyAssignmentsScreen> createState() => _MyAssignmentsScreenState();
+  State<CreatedReportsScreen> createState() => _CreatedReportsScreenState();
 }
 
-class _MyAssignmentsScreenState extends State<MyAssignmentsScreen> {
+class _CreatedReportsScreenState extends State<CreatedReportsScreen> {
   bool _isLoading = true;
-  List<Report> _pendingReports = [];
+  List<Report> _createdReports = [];
   String? _error;
 
   @override
@@ -34,10 +34,10 @@ class _MyAssignmentsScreenState extends State<MyAssignmentsScreen> {
 
     try {
       final token = context.read<AuthProvider>().token;
-      final rawReports = await ReportService(token).getPendingReports(widget.orgId);
+      final rawReports = await ReportService(token).getCreatedReports(widget.orgId);
       
       setState(() {
-        _pendingReports = rawReports.map((r) => Report.fromJson(r)).toList();
+        _createdReports = rawReports.map((r) => Report.fromJson(r)).toList();
         _isLoading = false;
       });
     } catch (e) {
@@ -53,7 +53,7 @@ class _MyAssignmentsScreenState extends State<MyAssignmentsScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF4F7FC),
       appBar: AppBar(
-        title: const Text('My Pending Reports', style: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold)),
+        title: const Text('My Created Reports', style: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         elevation: 1,
         iconTheme: const IconThemeData(color: Colors.black),
@@ -71,14 +71,14 @@ class _MyAssignmentsScreenState extends State<MyAssignmentsScreen> {
                     ],
                   ),
                 )
-              : _pendingReports.isEmpty
+              : _createdReports.isEmpty
                   ? Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.check_circle_outline, size: 64, color: Colors.green[300]),
+                          Icon(Icons.folder_shared_outlined, size: 64, color: Colors.grey[400]),
                           const SizedBox(height: 16),
-                          const Text('You have no pending reports!', style: TextStyle(fontSize: 18, color: Colors.grey)),
+                          const Text('You have not created any reports yet.', style: TextStyle(fontSize: 16, color: Colors.grey)),
                         ],
                       ),
                     )
@@ -86,12 +86,12 @@ class _MyAssignmentsScreenState extends State<MyAssignmentsScreen> {
                       onRefresh: _fetchReports,
                       child: ListView.builder(
                         padding: const EdgeInsets.all(16),
-                        itemCount: _pendingReports.length,
+                        itemCount: _createdReports.length,
                         itemBuilder: (context, index) {
-                          final report = _pendingReports[index];
-                          final formattedDate = report.deadline != null 
-                              ? DateFormat('MMM d, yyyy h:mm a').format(report.deadline!) 
-                              : 'No deadline';
+                          final report = _createdReports[index];
+                          final formattedDate = report.createdAt != null 
+                              ? DateFormat('MMM d, yyyy').format(report.createdAt!) 
+                              : 'Unknown Date';
                           
                           return Card(
                             elevation: 1,
@@ -105,27 +105,20 @@ class _MyAssignmentsScreenState extends State<MyAssignmentsScreen> {
                                   color: const Color(0xFF1967D2).withOpacity(0.1),
                                   shape: BoxShape.circle,
                                 ),
-                                child: const Icon(Icons.assignment_outlined, color: Color(0xFF1967D2)),
+                                child: const Icon(Icons.analytics_outlined, color: Color(0xFF1967D2)),
                               ),
                               title: Text(report.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                               subtitle: Padding(
                                 padding: const EdgeInsets.only(top: 4.0),
-                                child: Text('Due: $formattedDate', style: TextStyle(color: Colors.red[700], fontSize: 13)),
+                                child: Text('Created: $formattedDate', style: TextStyle(color: Colors.grey[600], fontSize: 13)),
                               ),
-                              trailing: ElevatedButton(
-                                onPressed: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(builder: (_) => FillReportScreen(orgId: widget.orgId, report: report)),
-                                  ).then((_) => _fetchReports()); // Refresh when returning
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF1967D2),
-                                  foregroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                ),
-                                child: const Text('Fill out'),
-                              ),
+                              trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => ReportSubmissionsScreen(orgId: widget.orgId, reportId: report.id)),
+                                );
+                              },
                             ),
                           );
                         },
