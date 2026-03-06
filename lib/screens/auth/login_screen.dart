@@ -145,14 +145,21 @@ class _LoginScreenState extends State<LoginScreen> {
                   children: [
                     Text("Don't have an account? ", style: TextStyle(color: Colors.grey[600])),
                     GestureDetector(
+                      behavior: HitTestBehavior.opaque,
                       onTap: () {
-                        // Navigate to signUp or just use the system's auth flow
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const SignupScreen()),
+                        );
                       },
-                      child: const Text(
-                        'Sign Up',
-                        style: TextStyle(
-                          color: Color(0xFF1967D2),
-                          fontWeight: FontWeight.bold,
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 8),
+                        child: Text(
+                          'Sign Up',
+                          style: TextStyle(
+                            color: Color(0xFF1967D2),
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
