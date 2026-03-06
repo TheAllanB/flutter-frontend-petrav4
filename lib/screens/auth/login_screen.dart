@@ -22,10 +22,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final auth = context.read<AuthProvider>();
     try {
       await auth.login(_emailCtrl.text.trim(), _pwdCtrl.text);
-      // on success go to the main app
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const MainNavigation()),
-      );
+      // on success, MaterialApp.home in main.dart will reactively swap to MainNavigation
     } catch (e) {
       setState(() => _error = e.toString());
     } finally {

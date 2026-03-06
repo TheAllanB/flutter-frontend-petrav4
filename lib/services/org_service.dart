@@ -53,7 +53,7 @@ class OrgService {
   Future<Organization> createOrg(Map<String, dynamic> data) async {
     final response = await _apiClient.post('/organizations', body: data);
     if (response.statusCode == 201) {
-      return Organization.fromJson(jsonDecode(response.body));
+      return Organization.fromJson(jsonDecode(response.body)['organization']);
     }
     throw Exception('Failed to create org: ${response.statusCode} - ${response.body}');
   }
@@ -81,7 +81,7 @@ class OrgService {
   Future<Organization> updateOrg(int orgId, Map<String, dynamic> data) async {
     final response = await _apiClient.patch('/organizations/$orgId', body: data);
     if (response.statusCode == 200) {
-      return Organization.fromJson(jsonDecode(response.body));
+      return Organization.fromJson(jsonDecode(response.body)['organization']);
     }
     throw Exception('Failed to update organization');
   }
@@ -113,7 +113,7 @@ class OrgService {
       });
 
     if (response.statusCode == 201) {
-      return Node.fromJson(jsonDecode(response.body));
+      return Node.fromJson(jsonDecode(response.body)['node']);
     } else {
       throw Exception('Failed to create node: ${response.body}');
     }
@@ -125,7 +125,7 @@ class OrgService {
       });
 
     if (response.statusCode == 200) {
-      return Node.fromJson(jsonDecode(response.body));
+      return Node.fromJson(jsonDecode(response.body)['node']);
     } else {
       throw Exception('Failed to update node: ${response.body}');
     }

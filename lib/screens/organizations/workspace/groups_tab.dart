@@ -9,41 +9,14 @@ class GroupsTab extends StatelessWidget {
   const GroupsTab({super.key});
 
   void _showCreateRootDialog(BuildContext context, OrganizationProvider provider) {
-    final nameCtrl = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Create Root Group'),
-        content: TextField(
-          controller: nameCtrl, 
-          decoration: const InputDecoration(labelText: 'Name'),
-          autofocus: true,
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          ElevatedButton(
-            onPressed: () async {
-              if (nameCtrl.text.isEmpty) return;
-              try {
-                final token = context.read<AuthProvider>().token;
-                final orgId = provider.currentOrg!.id;
-                await OrgService(token).createNode(orgId, nameCtrl.text, 'organization');
-                
-                final flatNodes = await OrgService(token).getNodes(orgId);
-                if (ctx.mounted) {
-                  ctx.read<OrganizationProvider>().setNodes(flatNodes);
-                  Navigator.pop(ctx);
-                }
-              } catch (e) {
-                if (ctx.mounted) {
-                  ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text(e.toString())));
-                }
-              }
-            },
-            child: const Text('Create'),
-          ),
-        ],
-      )
+    NodeDialog.show(
+      context,
+      parentNode: null,
+      editingNode: null,
+      orgId: provider.currentOrg!.id,
+      onNodesUpdated: (nodes) {
+        context.read<OrganizationProvider>().setNodes(nodes);
+      },
     );
   }
 

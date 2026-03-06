@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/organization.dart';
 import '../models/role.dart';
 import '../models/node.dart';
+import '../utils/type_utils.dart';
 
 class OrganizationProvider extends ChangeNotifier {
   Organization? _currentOrg;
@@ -34,16 +35,19 @@ class OrganizationProvider extends ChangeNotifier {
   }
 
   List<Node> _buildTree(List<Node> nodes, int? parentId) {
-    return nodes.where((n) => n.parentId == parentId).map((n) {
-      return Node(
-        id: n.id,
-        organizationId: n.organizationId,
-        parentId: n.parentId,
-        name: n.name,
-        description: n.description,
-        children: _buildTree(nodes, n.id), // Recursive structure
-      );
-    }).toList();
+    return nodes
+        .where((n) => n.parentId == parentId)
+        .map((n) {
+          return Node(
+            id: n.id,
+            organizationId: n.organizationId,
+            parentId: n.parentId,
+            name: n.name,
+            description: n.description,
+            children: _buildTree(nodes, n.id), // Recursive structure
+          );
+        })
+        .toList();
   }
 
   void setMembers(List<dynamic> membersList) {

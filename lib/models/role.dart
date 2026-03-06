@@ -1,3 +1,5 @@
+import '../utils/type_utils.dart';
+
 class Role {
   final int id;
   final int? organizationId;
@@ -21,13 +23,13 @@ class Role {
 
   factory Role.fromJson(Map<String, dynamic> json) {
     return Role(
-      id: json['id'],
-      organizationId: json['organization_id'],
-      nodeId: json['node_id'],
+      id: TypeUtils.parseIntRequired(json['id']),
+      organizationId: TypeUtils.parseInt(json['organization_id']),
+      nodeId: TypeUtils.parseInt(json['node_id']),
       name: json['name'],
       description: json['description'],
       isOwner: json['is_owner'] == true,
-      permissionsCount: json['permissions_count'] ?? 0,
+      permissionsCount: TypeUtils.parseIntRequired(json['permissions_count']),
       permissions: json['permissions'] ?? [],
     );
   }

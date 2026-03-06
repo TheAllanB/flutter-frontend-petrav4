@@ -41,8 +41,8 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
         final provider = context.read<OrganizationProvider>();
         provider.setContext(contextData);
         
-        // Phase 3.5: Pre-cache Nodes and Members
-        final flatNodes = await orgService.getNodes(widget.orgId);
+        // Phase 3.5: Pre-cache ALL Nodes and Members to build full tree
+        final flatNodes = await orgService.getNodes(widget.orgId, parentId: 'all');
         provider.setNodes(flatNodes);
 
         try {

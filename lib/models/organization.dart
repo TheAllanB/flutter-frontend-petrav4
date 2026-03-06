@@ -1,3 +1,5 @@
+import '../utils/type_utils.dart';
+
 class Organization {
   final int id;
   final String name;
@@ -15,7 +17,7 @@ class Organization {
 
   factory Organization.fromJson(Map<String, dynamic> json) {
     return Organization(
-      id: json['id'],
+      id: TypeUtils.parseIntRequired(json['id']),
       name: json['name'],
       description: json['description'],
       slug: json['slug'],

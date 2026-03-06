@@ -1,3 +1,5 @@
+import '../utils/type_utils.dart';
+
 class Node {
   final int id;
   final int organizationId;
@@ -17,9 +19,9 @@ class Node {
 
   factory Node.fromJson(Map<String, dynamic> json) {
     return Node(
-      id: json['id'],
-      organizationId: json['organization_id'],
-      parentId: json['parent_id'],
+      id: TypeUtils.parseIntRequired(json['id']),
+      organizationId: TypeUtils.parseIntRequired(json['organization_id']),
+      parentId: TypeUtils.parseInt(json['parent_id']),
       name: json['name'],
       description: json['description'],
       children: json['children'] != null

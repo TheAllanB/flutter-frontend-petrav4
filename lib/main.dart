@@ -17,8 +17,7 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
-        // A new AuthProvider instance is created here for the widget tree.
-        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider.value(value: authProvider),
         ChangeNotifierProvider(create: (_) => OrganizationProvider()),
       ],
       child: const MyApp(),
