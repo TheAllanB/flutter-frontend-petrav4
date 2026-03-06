@@ -79,13 +79,53 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
       return const Scaffold(body: Center(child: Text('Failed to load.')));
     }
 
-    final tabs = [
-      const GroupsTab(),
-      const MembersTab(),
-      const ReportsTab(),
-      const RolesTab(),
-      const SettingsTab()
+    // Define all available tabs and their metadata
+    final List<Map<String, dynamic>> allTabs = [
+      {
+        'label': 'Groups',
+        'icon': Icons.folder_outlined,
+        'selectedIcon': Icons.folder,
+        'widget': const GroupsTab(),
+      },
+      {
+        'label': 'Members',
+        'icon': Icons.people_outline,
+        'selectedIcon': Icons.people,
+        'widget': const MembersTab(),
+      },
+      {
+        'label': 'Reports',
+        'icon': Icons.assignment_outlined,
+        'selectedIcon': Icons.assignment,
+        'widget': const ReportsTab(),
+      },
+      {
+        'label': 'Roles',
+        'icon': Icons.shield_outlined,
+        'selectedIcon': Icons.shield,
+        'widget': const RolesTab(),
+        'permission': 'org.settings.view', // Conditional permission check
+      },
+      {
+        'label': 'Settings',
+        'icon': Icons.settings_outlined,
+        'selectedIcon': Icons.settings,
+        'widget': const SettingsTab(),
+      },
     ];
+
+    // Filter tabs based on permissions
+    final filteredTabs = allTabs.where((tab) {
+      if (tab.containsKey('permission')) {
+        return orgProvider.hasPermission(tab['permission']);
+      }
+      return true;
+    }).toList();
+
+    // Ensure _currentIndex is within bounds of filteredTabs
+    if (_currentIndex >= filteredTabs.length) {
+      _currentIndex = 0;
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -168,38 +208,18 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
           )
         ],
       ),
-      body: tabs[_currentIndex],
+      body: filteredTabs[_currentIndex]['widget'] as Widget,
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
         onDestinationSelected: (idx) => setState(() => _currentIndex = idx),
         backgroundColor: Colors.white,
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.folder_outlined),
-            selectedIcon: Icon(Icons.folder),
-            label: 'Groups',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.people_outline),
-            selectedIcon: Icon(Icons.people),
-            label: 'Members',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.assignment_outlined),
-            selectedIcon: Icon(Icons.assignment),
-            label: 'Reports',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.shield_outlined),
-            selectedIcon: Icon(Icons.shield),
-            label: 'Roles',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.settings_outlined),
-            selectedIcon: Icon(Icons.settings),
-            label: 'Settings',
-          ),
-        ],
+        destinations: filteredTabs.map((tab) {
+          return NavigationDestination(
+            icon: Icon(tab['icon'] as IconData),
+            selectedIcon: Icon(tab['selectedIcon'] as IconData),
+            label: tab['label'] as String,
+          );
+        }).toList(),
       ),
     );
   }
