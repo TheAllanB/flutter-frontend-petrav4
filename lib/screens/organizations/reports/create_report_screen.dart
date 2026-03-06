@@ -689,13 +689,10 @@ class _TargetSelectionDialogState extends State<_TargetSelectionDialog> {
         final node = widget.allNodes[i];
         return Padding(
           padding: const EdgeInsets.only(bottom: 8.0),
-          child: InkWell(
-            onTap: () => Navigator.pop(context, {'type': 'node', 'id': node.id, 'name': node.name}),
-            borderRadius: BorderRadius.circular(12),
-            child: RecursiveNodeTree(
-              node: node, 
-              canEdit: false,
-            ),
+          child: RecursiveNodeTree(
+            node: node, 
+            canEdit: false,
+            onNodeTap: (selectedNode) => Navigator.pop(context, {'type': 'node', 'id': selectedNode.id, 'name': selectedNode.name}),
           ),
         );
       },

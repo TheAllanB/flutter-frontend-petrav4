@@ -10,11 +10,13 @@ import '../screens/organizations/workspace/node_view_screen.dart';
 class RecursiveNodeTree extends StatefulWidget {
   final Node node;
   final bool canEdit;
+  final void Function(Node)? onNodeTap;
 
   const RecursiveNodeTree({
     super.key,
     required this.node,
     required this.canEdit,
+    this.onNodeTap,
   });
 
   @override
@@ -38,17 +40,19 @@ class _RecursiveNodeTreeState extends State<RecursiveNodeTree> {
             border: Border.all(color: const Color(0xFFE2E8F0)),
           ),
           child: InkWell(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => NodeViewScreen(
-                    node: widget.node,
-                    orgId: context.read<OrganizationProvider>().currentOrg!.id,
+            onTap: widget.onNodeTap != null 
+              ? () => widget.onNodeTap!(widget.node)
+              : () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => NodeViewScreen(
+                      node: widget.node,
+                      orgId: context.read<OrganizationProvider>().currentOrg!.id,
+                    ),
                   ),
-                ),
-              );
-            },
+                );
+              },
             borderRadius: BorderRadius.circular(12),
             child: ListTile(
               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
@@ -122,6 +126,7 @@ class _RecursiveNodeTreeState extends State<RecursiveNodeTree> {
               children: widget.node.children.map((child) => RecursiveNodeTree(
                 node: child, 
                 canEdit: widget.canEdit,
+                onNodeTap: widget.onNodeTap,
               )).toList(),
             ),
           ),
