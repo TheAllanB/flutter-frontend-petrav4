@@ -15,6 +15,7 @@ class MembersTab extends StatefulWidget {
 
 class _MembersTabState extends State<MembersTab> {
   List<dynamic> _members = [];
+  List<dynamic> _requests = [];
   bool _isLoading = true;
 
   @override
@@ -27,13 +28,35 @@ class _MembersTabState extends State<MembersTab> {
     setState(() => _isLoading = true);
     try {
       final token = context.read<AuthProvider>().token;
-      final orgId = context.read<OrganizationProvider>().currentOrg!.id;
+      final orgProvider = context.read<OrganizationProvider>();
+      final orgId = orgProvider.currentOrg!.id;
+      final canEditMembers = orgProvider.hasPermission('org.members.edit');
 
       if (token != null) {
         final members = await OrgService(token).getMembers(orgId);
+        List<dynamic> requests = [];
+        if (canEditMembers) {
+          try {
+            final rawRequests = await OrgService(token).getJoinRequests(orgId);
+            requests = List<dynamic>.from(rawRequests);
+            print('SUCCESS fetching join requests: \${requests.length}');
+          } catch (e, stacktrace) {
+            print('Error fetching join requests: $e\\n$stacktrace');
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('DEBUG_REQ_ERR: $e', maxLines: 5),
+                  duration: const Duration(seconds: 10),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+          }
+        }
         if (mounted) {
           setState(() {
             _members = members;
+            _requests = requests;
             _isLoading = false;
           });
         }
@@ -71,10 +94,59 @@ class _MembersTabState extends State<MembersTab> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF4F7FC),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(16.0),
-        itemCount: _members.length,
-        itemBuilder: (context, index) {
+      body: Column(
+        children: [
+          if (canEditMembers)
+            Container(
+              margin: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+              decoration: BoxDecoration(
+                color: _requests.isEmpty ? Colors.grey.shade200 : const Color(0xFFFFF3CD),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: _requests.isEmpty ? Colors.grey.shade300 : const Color(0xFFFFEEBA)),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline, color: _requests.isEmpty ? Colors.grey.shade600 : const Color(0xFF856404)),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      '${_requests.length} pending join requests',
+                      style: TextStyle(color: _requests.isEmpty ? Colors.grey.shade700 : const Color(0xFF856404), fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: _requests.isEmpty ? null : () {
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (context) => _JoinRequestsSheet(
+                          requests: _requests,
+                          onRefresh: _loadMembers,
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _requests.isEmpty ? Colors.grey.shade400 : const Color(0xFF856404),
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                    ),
+                    child: const Text('Review'),
+                  ),
+                ],
+              ),
+            ),
+          Expanded(
+            child: ListView.builder(
+              padding: EdgeInsets.only(
+                left: 16.0,
+                right: 16.0,
+                bottom: 16.0,
+                top: canEditMembers ? 0 : 16.0,
+              ),
+              itemCount: _members.length,
+              itemBuilder: (context, index) {
           final member = _members[index];
           final handle = member['handle'] != null ? '@${member['handle']}' : 'No handle';
           final roles = (member['roles'] as List<dynamic>?) ?? [];
@@ -136,8 +208,11 @@ class _MembersTabState extends State<MembersTab> {
           );
         },
       ),
-    );
-  }
+     ),
+    ],
+   ),
+  );
+ }
 }
 
 class _AssignRolesSheet extends StatefulWidget {
@@ -520,6 +595,247 @@ class _NodeTreeItemState extends State<_NodeTreeItem> {
             onSelect: widget.onSelect,
           )),
       ],
+    );
+  }
+}
+
+class _JoinRequestsSheet extends StatefulWidget {
+  final List<dynamic> requests;
+  final VoidCallback onRefresh;
+
+  const _JoinRequestsSheet({required this.requests, required this.onRefresh});
+
+  @override
+  State<_JoinRequestsSheet> createState() => _JoinRequestsSheetState();
+}
+
+class _JoinRequestsSheetState extends State<_JoinRequestsSheet> {
+  List<Role> _allRoles = [];
+  bool _isLoadingRoles = true;
+  bool _isProcessing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchRoles();
+  }
+
+  Future<void> _fetchRoles() async {
+    try {
+      final token = context.read<AuthProvider>().token!;
+      final orgId = context.read<OrganizationProvider>().currentOrg!.id;
+      final roles = await OrgService(token).getRoles(orgId);
+      if (mounted) {
+        setState(() {
+          _allRoles = roles;
+          _isLoadingRoles = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) setState(() => _isLoadingRoles = false);
+    }
+  }
+
+  Future<void> _acceptRequest(int requestId, int roleId) async {
+    setState(() => _isProcessing = true);
+    try {
+      final token = context.read<AuthProvider>().token!;
+      final orgId = context.read<OrganizationProvider>().currentOrg!.id;
+      await OrgService(token).acceptJoinRequest(orgId, requestId, roleId);
+      if (mounted) {
+        widget.onRefresh();
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Request accepted')));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e')));
+      }
+    } finally {
+      if (mounted) setState(() => _isProcessing = false);
+    }
+  }
+
+  Future<void> _rejectRequest(int requestId) async {
+    setState(() => _isProcessing = true);
+    try {
+      final token = context.read<AuthProvider>().token!;
+      final orgId = context.read<OrganizationProvider>().currentOrg!.id;
+      await OrgService(token).rejectJoinRequest(orgId, requestId);
+      if (mounted) {
+        widget.onRefresh();
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Request rejected')));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e')));
+      }
+    } finally {
+      if (mounted) setState(() => _isProcessing = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: Color(0xFFF4F7FC),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      margin: EdgeInsets.only(top: MediaQuery.of(context).padding.top + kToolbarHeight),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: const BoxDecoration(
+              color: Color(0xFF856404),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.person_add, color: Colors.white),
+                const SizedBox(width: 12),
+                const Text('Pending Join Requests', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                const Spacer(),
+                IconButton(
+                  icon: const Icon(Icons.close, color: Colors.white),
+                  onPressed: () => Navigator.pop(context),
+                )
+              ],
+            ),
+          ),
+          Expanded(
+            child: _isLoadingRoles
+              ? const Center(child: CircularProgressIndicator())
+              : ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: widget.requests.length,
+                  itemBuilder: (context, index) {
+                    final req = widget.requests[index];
+                    return _RequestItem(
+                      request: req,
+                      allRoles: _allRoles,
+                      isProcessing: _isProcessing,
+                      onAccept: _acceptRequest,
+                      onReject: _rejectRequest,
+                    );
+                  },
+                ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RequestItem extends StatefulWidget {
+  final Map<String, dynamic> request;
+  final List<Role> allRoles;
+  final bool isProcessing;
+  final Function(int, int) onAccept;
+  final Function(int) onReject;
+
+  const _RequestItem({
+    required this.request,
+    required this.allRoles,
+    required this.isProcessing,
+    required this.onAccept,
+    required this.onReject,
+  });
+
+  @override
+  State<_RequestItem> createState() => _RequestItemState();
+}
+
+class _RequestItemState extends State<_RequestItem> {
+  int? _selectedRole;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.allRoles.isNotEmpty) {
+      _selectedRole = widget.allRoles.first.id;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final user = widget.request['user'];
+    final handle = user['handle'] != null ? '@${user['handle']}' : 'No handle';
+
+    return Card(
+      elevation: 0,
+      margin: const EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                CircleAvatar(
+                  backgroundColor: const Color(0xFFFFF3CD),
+                  child: Text(user['name'][0].toUpperCase(), style: const TextStyle(color: Color(0xFF856404), fontWeight: FontWeight.bold)),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(user['name'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      Text(handle, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            if (widget.allRoles.isNotEmpty)
+              Row(
+                children: [
+                  const Text('Assign Role: ', style: TextStyle(fontSize: 13, color: Colors.grey, fontWeight: FontWeight.bold)),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<int>(
+                        value: _selectedRole,
+                        isExpanded: true,
+                        onChanged: (val) {
+                          setState(() => _selectedRole = val);
+                        },
+                        items: widget.allRoles.map((r) => DropdownMenuItem<int>(
+                          value: r.id,
+                          child: Text(r.name, style: const TextStyle(fontSize: 14)),
+                        )).toList(),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(
+                  onPressed: widget.isProcessing ? null : () => widget.onReject(widget.request['id']),
+                  style: TextButton.styleFrom(foregroundColor: Colors.red),
+                  child: const Text('Reject'),
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton(
+                  onPressed: widget.isProcessing || _selectedRole == null 
+                    ? null 
+                    : () => widget.onAccept(widget.request['id'], _selectedRole!),
+                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1967D2), foregroundColor: Colors.white),
+                  child: const Text('Accept'),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

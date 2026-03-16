@@ -65,36 +65,34 @@ class _SettingsTabState extends State<SettingsTab> {
       children: [
         const Text('Organization Profile', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF0D253F))),
         const SizedBox(height: 24),
-        TextField(
-          controller: _nameController,
-          enabled: canEdit,
-          decoration: const InputDecoration(
-            labelText: 'Organization Name',
-            border: OutlineInputBorder(),
+        if (canEdit) ...[
+          TextField(
+            controller: _nameController,
+            decoration: const InputDecoration(
+              labelText: 'Organization Name',
+              border: OutlineInputBorder(),
+            ),
           ),
-        ),
-        const SizedBox(height: 16),
-        TextField(
-          controller: _descController,
-          enabled: canEdit,
-          maxLines: 3,
-          decoration: const InputDecoration(
-            labelText: 'Description',
-            border: OutlineInputBorder(),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _descController,
+            maxLines: 3,
+            decoration: const InputDecoration(
+              labelText: 'Description',
+              border: OutlineInputBorder(),
+            ),
           ),
-        ),
-        const SizedBox(height: 16),
-        TextField(
-          controller: TextEditingController(text: org.uid ?? ''),
-          enabled: false,
-          decoration: const InputDecoration(
-            labelText: 'Unique ID (Read-only)',
-            border: OutlineInputBorder(),
-            filled: true,
+          const SizedBox(height: 16),
+          TextField(
+            controller: TextEditingController(text: org.uid ?? ''),
+            enabled: false,
+            decoration: const InputDecoration(
+              labelText: 'Unique ID (Read-only)',
+              border: OutlineInputBorder(),
+              filled: true,
+            ),
           ),
-        ),
-        const SizedBox(height: 24),
-        if (canEdit)
+          const SizedBox(height: 24),
           ElevatedButton(
             onPressed: _isSaving ? null : _saveSettings,
             style: ElevatedButton.styleFrom(
@@ -105,6 +103,24 @@ class _SettingsTabState extends State<SettingsTab> {
                 ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                 : const Text('Save Changes', style: TextStyle(color: Colors.white, fontSize: 16)),
           ),
+        ] else ...[
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.grey.shade300),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Organization Name', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                const SizedBox(height: 4),
+                Text(org.name, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF0D253F))),
+              ],
+            ),
+          ),
+        ],
         const Divider(height: 48),
         ListTile(
           leading: const Icon(Icons.logout, color: Colors.redAccent),

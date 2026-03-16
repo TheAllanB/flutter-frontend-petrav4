@@ -27,10 +27,48 @@ class OrgService {
     throw Exception('Failed to search orgs');
   }
 
-  Future<void> joinOrg(int orgId) async {
+  Future<String> joinOrg(int orgId) async {
     final response = await _apiClient.post('/organizations/$orgId/join');
+    final data = jsonDecode(response.body);
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return data['message'] ?? 'Successfully sent join request.';
+    } else {
+      throw Exception(data['message'] ?? 'Failed to join org');
+    }
+  }
+
+  Future<List<dynamic>> getJoinRequests(int orgId) async {
+    final response = await _apiClient.get('/organizations/$orgId/requests');
+    print('getJoinRequests status: ${response.statusCode}');
+    print('getJoinRequests body: ${response.body}');
+    if (response.statusCode == 200) {
+      final decoded = jsonDecode(response.body);
+      if (decoded is List) {
+        return decoded;
+      }
+      if (decoded is Map && decoded.containsKey('data')) {
+        return decoded['data'] as List<dynamic>;
+      }
+      return decoded as List<dynamic>;
+    }
+    throw Exception('Failed to load join requests (Status ${response.statusCode}): ${response.body}');
+  }
+
+  Future<void> acceptJoinRequest(int orgId, int requestId, int roleId) async {
+    final response = await _apiClient.post('/organizations/$orgId/requests/$requestId/accept', body: {
+      'role_id': roleId,
+    });
     if (response.statusCode != 200) {
-      throw Exception('Failed to join org');
+      final data = jsonDecode(response.body);
+      throw Exception(data['message'] ?? 'Failed to accept request');
+    }
+  }
+
+  Future<void> rejectJoinRequest(int orgId, int requestId) async {
+    final response = await _apiClient.post('/organizations/$orgId/requests/$requestId/reject');
+    if (response.statusCode != 200) {
+      final data = jsonDecode(response.body);
+      throw Exception(data['message'] ?? 'Failed to reject request');
     }
   }
 

@@ -17,6 +17,7 @@ class _JoinOrganizationScreenState extends State<JoinOrganizationScreen> {
   List<Organization> _orgs = [];
   bool _isLoading = false;
   Timer? _debounce;
+  final Set<int> _pendingRequests = {};
 
   @override
   void initState() {
@@ -48,12 +49,23 @@ class _JoinOrganizationScreenState extends State<JoinOrganizationScreen> {
     try {
       final token = context.read<AuthProvider>().token;
       if (token != null) {
-        await OrgService(token).joinOrg(id);
-        if(mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Joined successfully')));
-        _searchOrgs(_searchController.text);
+        final message = await OrgService(token).joinOrg(id);
+        if(mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+          setState(() => _pendingRequests.add(id));
+        }
       }
     } catch (e) {
-      if(mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      if(mounted) {
+        String errMsg = e.toString();
+        if (errMsg.startsWith('Exception: ')) {
+          errMsg = errMsg.substring(11);
+        }
+        if (errMsg.contains('already pending')) {
+          setState(() => _pendingRequests.add(id));
+        }
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errMsg)));
+      }
     }
   }
 
@@ -113,12 +125,12 @@ class _JoinOrganizationScreenState extends State<JoinOrganizationScreen> {
                               title: Text(org.name, style: const TextStyle(fontWeight: FontWeight.bold)),
                               subtitle: Text('UID: ${org.uid}'),
                               trailing: ElevatedButton(
-                                onPressed: () => _joinOrg(org.id),
+                                onPressed: _pendingRequests.contains(org.id) ? null : () => _joinOrg(org.id),
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF1967D2),
+                                  backgroundColor: _pendingRequests.contains(org.id) ? Colors.grey : const Color(0xFF1967D2),
                                   foregroundColor: Colors.white,
                                 ),
-                                child: const Text('Join'),
+                                child: Text(_pendingRequests.contains(org.id) ? 'Pending' : 'Join'),
                               ),
                             ),
                           );

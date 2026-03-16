@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
+import '../auth/login_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -119,7 +120,12 @@ class ProfileScreen extends StatelessWidget {
               child: InkWell(
                 onTap: () async {
                   await context.read<AuthProvider>().logout();
-                  // MaterialApp.home in main.dart will reactively swap back to LoginScreen
+                  if (context.mounted) {
+                    Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
+                      MaterialPageRoute(builder: (_) => const LoginScreen()),
+                      (route) => false,
+                    );
+                  }
                 },
                 child: Container(
                   width: double.infinity,

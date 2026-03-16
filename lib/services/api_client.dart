@@ -6,12 +6,17 @@ import 'api_config.dart';
 class ApiClient {
   final _storage = const FlutterSecureStorage();
   
+  // In-memory cache to prevent extreme latency from hardware keystore reads on every request
+  static String? authToken;
+
   Future<Map<String, String>> _getHeaders() async {
-    final token = await _storage.read(key: 'auth_token');
+    // Only hit the slow secure storage if the token is null in memory
+    authToken ??= await _storage.read(key: 'auth_token');
+    
     return {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
-      if (token != null) 'Authorization': 'Bearer $token',
+      if (authToken != null) 'Authorization': 'Bearer $authToken',
     };
   }
 

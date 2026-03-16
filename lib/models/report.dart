@@ -1,4 +1,5 @@
 import 'user.dart';
+import '../utils/type_utils.dart';
 
 class Report {
   final int id;
@@ -23,9 +24,9 @@ class Report {
 
   factory Report.fromJson(Map<String, dynamic> json) {
     return Report(
-      id: json['id'],
-      organizationId: json['organization_id'],
-      creatorId: json['creator_id'],
+      id: TypeUtils.parseIntRequired(json['id']),
+      organizationId: TypeUtils.parseIntRequired(json['organization_id']),
+      creatorId: TypeUtils.parseIntRequired(json['creator_id']),
       title: json['title'],
       description: json['description'],
       deadline: json['deadline'] != null ? DateTime.tryParse(json['deadline']) : null,
@@ -69,13 +70,13 @@ class ReportQuestion {
 
   factory ReportQuestion.fromJson(Map<String, dynamic> json) {
     return ReportQuestion(
-      id: json['id'],
-      reportId: json['report_id'],
+      id: TypeUtils.parseIntRequired(json['id']),
+      reportId: TypeUtils.parseIntRequired(json['report_id']),
       type: json['type'],
       title: json['title'],
       isRequired: json['is_required'] ?? false,
       options: json['options'] != null ? List<String>.from(json['options']) : null,
-      orderIndex: json['order_index'] ?? 0,
+      orderIndex: TypeUtils.parseIntRequired(json['order_index']),
     );
   }
 }
@@ -99,9 +100,9 @@ class ReportSubmission {
 
   factory ReportSubmission.fromJson(Map<String, dynamic> json) {
     return ReportSubmission(
-      id: json['id'],
-      reportId: json['report_id'],
-      userId: json['user_id'],
+      id: TypeUtils.parseIntRequired(json['id']),
+      reportId: TypeUtils.parseIntRequired(json['report_id']),
+      userId: TypeUtils.parseIntRequired(json['user_id']),
       submittedAt: json['submitted_at'] != null ? DateTime.tryParse(json['submitted_at']) : null,
       user: json['user'] != null ? User.fromJson(json['user']) : null,
       answers: json['answers'] != null 
@@ -128,9 +129,9 @@ class ReportAnswer {
 
   factory ReportAnswer.fromJson(Map<String, dynamic> json) {
     return ReportAnswer(
-      id: json['id'],
-      submissionId: json['submission_id'],
-      questionId: json['question_id'],
+      id: TypeUtils.parseIntRequired(json['id']),
+      submissionId: TypeUtils.parseIntRequired(json['submission_id']),
+      questionId: TypeUtils.parseIntRequired(json['question_id']),
       answerData: json['answer_data'] ?? {},
       question: json['question'] != null ? ReportQuestion.fromJson(json['question']) : null,
     );

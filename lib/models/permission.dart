@@ -1,3 +1,5 @@
+import '../utils/type_utils.dart';
+
 class Permission {
   final int id;
   final String name;
@@ -15,7 +17,7 @@ class Permission {
 
   factory Permission.fromJson(Map<String, dynamic> json) {
     return Permission(
-      id: json['id'],
+      id: TypeUtils.parseIntRequired(json['id']),
       name: json['name'],
       key: json['key'],
       module: json['module'],

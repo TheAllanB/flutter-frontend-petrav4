@@ -1,3 +1,5 @@
+import '../utils/type_utils.dart';
+
 class User {
   final int id;
   final String name;
@@ -7,7 +9,7 @@ class User {
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
-      id: json['id'],
+      id: TypeUtils.parseIntRequired(json['id']),
       name: json['name'],
       email: json['email'],
     );

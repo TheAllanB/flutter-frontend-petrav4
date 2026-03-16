@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../services/auth_service.dart';
 import '../models/user.dart';
+import '../services/api_client.dart';
 
 class AuthProvider with ChangeNotifier {
   final AuthService _authService = AuthService();
@@ -18,6 +19,7 @@ class AuthProvider with ChangeNotifier {
     final data = await _authService.login(email, password);
     _token = data['token'];
     _user = data['user'];
+    ApiClient.authToken = _token;
     await _storage.write(key: 'auth_token', value: _token);
     notifyListeners();
   }
@@ -26,6 +28,7 @@ class AuthProvider with ChangeNotifier {
     final data = await _authService.register(name, email, password);
     _token = data['token'];
     _user = data['user'];
+    ApiClient.authToken = _token;
     await _storage.write(key: 'auth_token', value: _token);
     notifyListeners();
   }
@@ -33,6 +36,7 @@ class AuthProvider with ChangeNotifier {
   Future<void> logout() async {
     _token = null;
     _user = null;
+    ApiClient.authToken = null;
     await _storage.delete(key: 'auth_token');
     notifyListeners();
   }
@@ -47,7 +51,11 @@ class AuthProvider with ChangeNotifier {
         // Token might be invalid or expired
         await _storage.delete(key: 'auth_token');
         _token = null;
+        ApiClient.authToken = null;
         _user = null;
+      }
+      if (_token != null) {
+        ApiClient.authToken = _token;
       }
     }
     notifyListeners();
