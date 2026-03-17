@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../../models/report.dart';
 import '../../../providers/auth_provider.dart';
+import '../../../providers/org_provider.dart';
 import '../../../services/report_service.dart';
 
 class ReportSubmissionsScreen extends StatefulWidget {
@@ -35,7 +36,8 @@ class _ReportSubmissionsScreenState extends State<ReportSubmissionsScreen> {
 
     try {
       final token = context.read<AuthProvider>().token;
-      final data = await ReportService(token!).getReportSubmissions(widget.orgId, widget.reportId);
+      final currentRoleId = context.read<OrganizationProvider>().role?.id;
+      final data = await ReportService(token!).getReportSubmissions(widget.orgId, widget.reportId, roleId: currentRoleId);
       
       setState(() {
         _report = Report.fromJson(data['report']);

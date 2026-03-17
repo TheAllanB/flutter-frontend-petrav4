@@ -68,16 +68,19 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
   Future<void> _fetchData() async {
     try {
       final token = context.read<AuthProvider>().token!;
-      final orgService = OrgService(token);
-      final futures = await Future.wait([
-        orgService.getRoles(widget.orgId),
-        orgService.getMembers(widget.orgId),
-      ]);
+      final currentRoleId = context.read<OrganizationProvider>().role?.id;
+      final targets = await ReportService(token).getReportTargets(widget.orgId, roleId: currentRoleId);
+      
       if (mounted) {
         setState(() {
-          _allNodes = context.read<OrganizationProvider>().nodeTree;
-          _allRoles = futures[0] as List<Role>;
-          _allMembers = futures[1];
+          final flatNodes = (targets['nodes'] as List?)?.map((n) => Node.fromJson(n)).toList() ?? [];
+          final roles = (targets['roles'] as List?)?.map((r) => Role.fromJson(r)).toList() ?? [];
+          final members = (targets['members'] as List?) ?? [];
+
+          // Re-nest the flat nodes strictly within the allowed scope
+          _allNodes = _buildTree(flatNodes);
+          _allRoles = roles;
+          _allMembers = members;
           _isLoadingData = false;
         });
       }
@@ -86,6 +89,27 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
         setState(() => _isLoadingData = false);
       }
     }
+  }
+
+  List<Node> _buildTree(List<Node> nodes, {bool isRoot = true, int? parentId}) {
+    Iterable<Node> currentNodes;
+    if (isRoot) {
+      final allIds = nodes.map((n) => n.id).toSet();
+      currentNodes = nodes.where((n) => n.parentId == null || !allIds.contains(n.parentId));
+    } else {
+      currentNodes = nodes.where((n) => n.parentId == parentId);
+    }
+    
+    return currentNodes.map((n) {
+      return Node(
+        id: n.id,
+        organizationId: n.organizationId,
+        parentId: n.parentId,
+        name: n.name,
+        description: n.description,
+        children: _buildTree(nodes, isRoot: false, parentId: n.id),
+      );
+    }).toList();
   }
 
   Future<void> _pickDeadline() async {

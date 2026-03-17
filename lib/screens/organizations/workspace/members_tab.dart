@@ -16,6 +16,7 @@ class MembersTab extends StatefulWidget {
 class _MembersTabState extends State<MembersTab> {
   List<dynamic> _members = [];
   List<dynamic> _requests = [];
+  List<Node> _allNodes = [];
   bool _isLoading = true;
 
   @override
@@ -33,15 +34,17 @@ class _MembersTabState extends State<MembersTab> {
       final canEditMembers = orgProvider.hasPermission('org.members.edit');
 
       if (token != null) {
-        final members = await OrgService(token).getMembers(orgId);
+        final activeRoleId = orgProvider.role?.id;
+        final members = await OrgService(token).getMembers(orgId, roleId: activeRoleId);
+        final nodes = await OrgService(token).getNodes(orgId, parentId: 'all');
         List<dynamic> requests = [];
         if (canEditMembers) {
           try {
             final rawRequests = await OrgService(token).getJoinRequests(orgId);
             requests = List<dynamic>.from(rawRequests);
-            print('SUCCESS fetching join requests: \${requests.length}');
+            print('SUCCESS fetching join requests: ${requests.length}');
           } catch (e, stacktrace) {
-            print('Error fetching join requests: $e\\n$stacktrace');
+            print('Error fetching join requests: $e\n$stacktrace');
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
@@ -57,6 +60,7 @@ class _MembersTabState extends State<MembersTab> {
           setState(() {
             _members = members;
             _requests = requests;
+            _allNodes = nodes;
             _isLoading = false;
           });
         }
@@ -77,6 +81,7 @@ class _MembersTabState extends State<MembersTab> {
       builder: (context) {
         return _AssignRolesSheet(
           member: member,
+          allNodes: _allNodes,
           onSave: _loadMembers,
         );
       },
@@ -183,16 +188,23 @@ class _MembersTabState extends State<MembersTab> {
                         Wrap(
                           spacing: 6,
                           runSpacing: 6,
-                          children: roles.isEmpty 
+                          children: roles.isEmpty
                             ? [const Text('No Role', style: TextStyle(color: Colors.grey, fontSize: 12))]
-                            : roles.map((r) => Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFE8F0FE),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Text(r['name'], style: const TextStyle(color: Color(0xFF1967D2), fontSize: 11, fontWeight: FontWeight.w600)),
-                              )).toList(),
+                            : roles.map((r) {
+                                final nodePath = _getRoleNodePath(r['node_id']);
+                                return Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                  margin: const EdgeInsets.only(right: 4),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFE8F0FE),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    r['node_id'] == null ? r['name'] : "${r['name']} ($nodePath)",
+                                    style: const TextStyle(color: Color(0xFF1967D2), fontSize: 11, fontWeight: FontWeight.w600),
+                                  ),
+                                );
+                              }).toList(),
                         ),
                       ],
                     ),
@@ -213,13 +225,30 @@ class _MembersTabState extends State<MembersTab> {
    ),
   );
  }
+
+ String _getRoleNodePath(int? nodeId) {
+    if (nodeId == null || _allNodes.isEmpty) return 'Global';
+
+    List<String> path = [];
+    int? currentId = nodeId;
+
+    while (currentId != null) {
+      final node = _allNodes.firstWhere((n) => n.id == currentId, orElse: () => Node(id: -1, organizationId: -1, name: 'Unknown'));
+      if (node.id == -1) break;
+      path.insert(0, node.name);
+      currentId = node.parentId;
+    }
+
+    return path.join(' > ');
+  }
 }
 
 class _AssignRolesSheet extends StatefulWidget {
   final Map<String, dynamic> member;
+  final List<Node> allNodes;
   final VoidCallback onSave;
 
-  const _AssignRolesSheet({required this.member, required this.onSave});
+  const _AssignRolesSheet({required this.member, required this.allNodes, required this.onSave});
 
   @override
   State<_AssignRolesSheet> createState() => _AssignRolesSheetState();
@@ -228,10 +257,10 @@ class _AssignRolesSheet extends StatefulWidget {
 class _AssignRolesSheetState extends State<_AssignRolesSheet> {
   List<Role> _allRoles = [];
   List<Node> _allNodes = [];
-  
+
   // Maps role_id -> node_id (null means global)
   final Map<int, int?> _selectedRoles = {};
-  
+
   bool _isLoadingRoles = true;
   bool _isSaving = false;
 
@@ -242,38 +271,40 @@ class _AssignRolesSheetState extends State<_AssignRolesSheet> {
     for (var r in userRoles) {
       _selectedRoles[r['id']] = r['node_id'];
     }
-    _fetchData();
+    _allRoles = [];
+    _allNodes = widget.allNodes;
+    _fetchRoles();
   }
 
-  Future<void> _fetchData() async {
+  String _getFullNodePath(int? nodeId) {
+    if (nodeId == null || _allNodes.isEmpty) return 'Select Node';
+    
+    List<String> path = [];
+    int? currentId = nodeId;
+    
+    while (currentId != null) {
+      final node = _allNodes.firstWhere((n) => n.id == currentId, orElse: () => Node(id: -1, organizationId: -1, name: 'Unknown'));
+      if (node.id == -1) break;
+      path.insert(0, node.name);
+      currentId = node.parentId;
+    }
+    
+    return path.join(' > ');
+  }
+
+  Future<void> _fetchRoles() async {
     try {
       final token = context.read<AuthProvider>().token!;
       final orgId = context.read<OrganizationProvider>().currentOrg!.id;
-      
       final roles = await OrgService(token).getRoles(orgId);
-      final nodes = await OrgService(token).getNodes(orgId, parentId: 'all');
-      
       if (mounted) {
         setState(() {
           _allRoles = roles;
-          _allNodes = nodes;
-          
-          if (_allNodes.isNotEmpty) {
-            for (var key in _selectedRoles.keys.toList()) {
-              if (_selectedRoles[key] == null) {
-                _selectedRoles[key] = _allNodes.first.id;
-              }
-            }
-          }
-
           _isLoadingRoles = false;
         });
       }
     } catch (e) {
-      if (mounted) {
-        setState(() => _isLoadingRoles = false);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to load data: $e')));
-      }
+      if (mounted) setState(() => _isLoadingRoles = false);
     }
   }
 
@@ -413,7 +444,7 @@ class _AssignRolesSheetState extends State<_AssignRolesSheet> {
                                                 children: [
                                                   Expanded(
                                                     child: Text(
-                                                      _allNodes.firstWhere((n) => n.id == _selectedRoles[role.id], orElse: () => Node(id: -1, organizationId: -1, name: 'Select Node')).name,
+                                                      _getFullNodePath(_selectedRoles[role.id]),
                                                       style: const TextStyle(fontSize: 13, color: Colors.black87),
                                                       maxLines: 1,
                                                       overflow: TextOverflow.ellipsis,

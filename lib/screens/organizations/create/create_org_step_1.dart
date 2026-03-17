@@ -12,6 +12,12 @@ class CreateOrgStep1 extends StatefulWidget {
 }
 
 class _CreateOrgStep1State extends State<CreateOrgStep1> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _generateUid());
+  }
+
   final _name = TextEditingController();
   final _uid = TextEditingController();
   final _website = TextEditingController();
@@ -90,12 +96,9 @@ class _CreateOrgStep1State extends State<CreateOrgStep1> {
                 Expanded(
                   child: TextField(
                     controller: _uid,
+                    readOnly: true,
                     maxLength: 12,
                     textCapitalization: TextCapitalization.characters,
-                    onChanged: (val) {
-                      if (val.length == 12) _checkUid(val);
-                      else setState(() { _uidAvailable = false; _uidError = null; });
-                    },
                     decoration: InputDecoration(
                       labelText: 'UID (12 chars required)',
                       errorText: _uidError,

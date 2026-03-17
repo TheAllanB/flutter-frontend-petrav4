@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../models/report.dart';
 import '../../../providers/auth_provider.dart';
+import '../../../providers/org_provider.dart';
 import '../../../services/report_service.dart';
 
 class FillReportScreen extends StatefulWidget {
@@ -33,13 +34,14 @@ class _FillReportScreenState extends State<FillReportScreen> {
 
     try {
       final token = context.read<AuthProvider>().token;
+      final currentRoleId = context.read<OrganizationProvider>().role?.id;
       
       final answersList = _answers.entries.map((e) => {
         'question_id': e.key,
         'value': e.value,
       }).toList();
 
-      await ReportService(token!).submitReport(widget.orgId, widget.report.id, answersList);
+      await ReportService(token!).submitReport(widget.orgId, widget.report.id, answersList, roleId: currentRoleId);
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Report submitted successfully!'), backgroundColor: Colors.green));

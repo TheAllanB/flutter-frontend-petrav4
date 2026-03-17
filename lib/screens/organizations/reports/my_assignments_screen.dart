@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../../models/report.dart';
 import '../../../providers/auth_provider.dart';
+import '../../../providers/org_provider.dart';
 import '../../../services/report_service.dart';
 import 'fill_report_screen.dart';
 
@@ -34,7 +35,8 @@ class _MyAssignmentsScreenState extends State<MyAssignmentsScreen> {
 
     try {
       final token = context.read<AuthProvider>().token;
-      final rawReports = await ReportService(token!).getPendingReports(widget.orgId);
+      final currentRoleId = context.read<OrganizationProvider>().role?.id;
+      final rawReports = await ReportService(token!).getPendingReports(widget.orgId, roleId: currentRoleId);
       
       setState(() {
         _pendingReports = rawReports.map((r) => Report.fromJson(r)).toList();

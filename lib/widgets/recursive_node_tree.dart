@@ -71,14 +71,6 @@ class _RecursiveNodeTreeState extends State<RecursiveNodeTree> {
                 children: [
                   if (widget.canEdit) ...[
                     IconButton(
-                      icon: const Icon(Icons.shield_outlined, size: 18, color: Colors.grey),
-                      onPressed: () {},
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                      splashRadius: 20,
-                    ),
-                    const SizedBox(width: 12),
-                    IconButton(
                       icon: const Icon(Icons.edit_outlined, size: 18, color: Colors.grey),
                       onPressed: () => NodeDialog.show(
                         context, 

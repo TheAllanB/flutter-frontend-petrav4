@@ -108,8 +108,11 @@ class OrgService {
     throw Exception('Failed to load organization context: ${response.body}');
   }
 
-  Future<List<dynamic>> getMembers(int orgId) async {
-    final response = await _apiClient.get('/organizations/$orgId/members');
+  Future<List<dynamic>> getMembers(int orgId, {int? roleId}) async {
+    final url = roleId != null 
+        ? '/organizations/$orgId/members?role_id=$roleId'
+        : '/organizations/$orgId/members';
+    final response = await _apiClient.get(url);
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     }
